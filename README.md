@@ -1,1 +1,1 @@
-# -Distributed-Query-System
+# Distributed-Query-System
