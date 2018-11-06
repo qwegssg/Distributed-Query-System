@@ -14,7 +14,6 @@
 using namespace std;
 
 const char* localHostAddress = "127.0.0.1";
-#define MAX_BUFFER_SIZE 2048
 
 #define PORT_SERVER_A_UDP 21105
 
