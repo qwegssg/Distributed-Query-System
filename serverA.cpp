@@ -13,8 +13,10 @@
 
 using namespace std;
 
-#define SERVER_A_PORT 21105
-#define BUFFER_SIZE 2048
+const char* localHostAddress = "127.0.0.1";
+#define MAX_BUFFER_SIZE 2048
+
+#define PORT_SERVER_A_UDP 21105
 
 int main() {
 	/*
@@ -27,26 +29,22 @@ int main() {
 		close(serverSocketA);
 		return 0;
 	}
-
-	// cout<<"socket result is "<<serverSocketA<<endl;
-
+	cout<<"socket result is "<<serverSocketA<<endl;
 	/*
 		bind the socket with a port, referred from Beej's
 	*/
-	struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_A_PORT);
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	int bindResult = bind(serverSocketA, (struct sockaddr*)&server_addr, sizeof server_addr);
+	struct sockaddr_in server_A_addr;
+    server_A_addr.sin_family = AF_INET;
+    server_A_addr.sin_port = htons(PORT_SERVER_A_UDP);
+    server_A_addr.sin_addr.s_addr = inet_addr(localHostAddress);
+	int bindResult = bind(serverSocketA, (struct sockaddr *)&server_A_addr, sizeof server_A_addr);
     if (bindResult < 0) {
    		cout<<"Error detected when binding the port!"<<endl;
         close(serverSocketA);
         return 0;
     }
-
     // cout<<"bind result is "<<bindResult<<endl;
-    
-    cout<<"The Server A is up and running using UDP on port "<<SERVER_A_PORT<<"."<<endl;
+    cout<<"The Server A is up and running using UDP on port "<<PORT_SERVER_A_UDP<<"."<<endl;
 
     return 0;
 
