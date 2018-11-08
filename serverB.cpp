@@ -13,9 +13,10 @@
 
 using namespace std;
 
-const char* localHostAddress = "127.0.0.1";s
+const char* localHostAddress = "127.0.0.1";
 
 #define PORT_SERVER_B_UDP 22105
+#define MAX_DATA_SIZE 100
 
 int main() {
 	/*
@@ -42,7 +43,24 @@ int main() {
         return 0;
     }
     // cout<<"bind result is "<<bindResult<<endl;
-    cout<<"The Server B is up and running using UDP on port "<<PORT_SERVER_B_UDP<<"."<<endl;
+    cout<<"The Server B is up and running using UDP on port <"<<PORT_SERVER_B_UDP<<">."<<endl;
+
+    while (true) {
+    	/*
+			receive link info from AWS
+    	*/
+    	struct sockaddr_in storage_addr;            
+    	socklen_t fromlen = sizeof storage_addr; 
+    	char* bufferID = new char[MAX_DATA_SIZE]; 
+    	int recvResult = recvfrom(serverSocketB, bufferID, sizeof bufferID, 0, (struct sockaddr *)&storage_addr, &fromlen);
+    	if (recvResult < 0) {
+    		cout<<"Error occurred when receiving link info from AWS!"<<endl;
+    		close(serverSocketB);
+    		return 0;
+    	}
+    	cout<<"The Server B received input <"<<bufferID<<">"<<endl;
+
+    }
 
     return 0;
 

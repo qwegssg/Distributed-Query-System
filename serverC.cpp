@@ -42,7 +42,7 @@ int main() {
         return 0;
     }
     // cout<<"bind result is "<<bindResult<<endl;
-    cout<<"The Server C is up and running using UDP on port "<<PORT_SERVER_C_UDP<<"."<<endl;
+    cout<<"The Server C is up and running using UDP on port <"<<PORT_SERVER_C_UDP<<">."<<endl;
 
     return 0;
 

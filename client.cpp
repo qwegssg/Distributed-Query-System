@@ -21,6 +21,10 @@ const char* localHostAddress = "127.0.0.1";
 // argc is at least 1, because the first string in argv is the command to invoke the program.
 int main(int argc, char* argv[]) {
 	// cout<<argc<<", "<<argv[1]<<", "<<argv[2]<<", "<<argv[3]<<endl;
+	if (argc < 4) {
+		cout<<"Error! please enter the input with correct format!"<<endl;
+		return 0;
+	}
 	/*
 		create TCP socket for client:
 	*/
@@ -44,6 +48,13 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     cout<<"The client is up and running."<<endl;
+    /*
+		client send messages to AWS server
+    */
+    for (int i = 0; i < 3; i++) {
+    	send(clientSocket, argv[i + 1], sizeof argv[i + 1], 0);
+    }
+	cout<<"The client sent ID=<"<<argv[1]<<">, size=<"<<argv[2]<<">, and power=<"<<argv[3]<<"> to AWS"<<endl;
 
 
 

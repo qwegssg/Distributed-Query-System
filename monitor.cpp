@@ -15,6 +15,7 @@ using namespace std;
 
 const char* localHostAddress = "127.0.0.1";
 
+// attention: embed the port number for aws server into the monitor side!
 #define PORT_MONITOR_TCP 26105
 
 int main() {
