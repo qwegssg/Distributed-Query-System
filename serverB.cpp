@@ -10,6 +10,9 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -28,7 +31,6 @@ int main() {
 		close(serverSocketB);
 		return 0;
 	}
-	cout<<"socket result is "<<serverSocketB<<endl;
 	/*
 		bind the socket with a port, referred from Beej's
 	*/
@@ -42,7 +44,6 @@ int main() {
         close(serverSocketB);
         return 0;
     }
-    // cout<<"bind result is "<<bindResult<<endl;
     cout<<"The Server B is up and running using UDP on port <"<<PORT_SERVER_B_UDP<<">."<<endl;
 
     while (true) {
@@ -59,7 +60,51 @@ int main() {
     		return 0;
     	}
     	cout<<"The Server B received input <"<<bufferID<<">"<<endl;
-
+	    /*
+			search the database for an exact match
+	    */
+	    ifstream file("database_b.csv");
+	    if (!file) {
+	    	cout<<"Error occurred when connecting to the database!"<<endl;
+	    	close(serverSocketB);
+	    	return 0;
+	    }
+    	// convert string into float number 
+  		double id = stod(bufferID);
+  		int isFound = false;
+  		string m; 
+	   	// loook up every line from database
+	  	for (string line; getline(file, line);) {
+	  		stringstream ss(line);
+	  		double i;
+	  		vector<double> vect;
+	  		// read every number of one line
+	  		while (ss >> i) {
+	  			if (i != id && !isFound) {
+	  				break;
+	  			} 
+				// if there is a match, extract the detailed link infomation
+  				isFound = true;
+  				vect.push_back(i);
+  				if (ss.peek() == ',') {
+  					ss.ignore();
+  				}
+	  		}
+	  		if (isFound) {
+	  			m = "1";
+	  			sendto(serverSocketB, m.c_str(), sizeof m, 0, (struct sockaddr *)&storage_addr, fromlen);
+	  			for (int i = 0; i < vect.size(); i++) {
+  					sendto(serverSocketB, to_string(vect.at(i)).c_str(), sizeof to_string(vect.at(i)), 0, (struct sockaddr *)&storage_addr, fromlen);
+	  			}
+	  			cout<<"The server B has found <1> match"<<endl;
+	  			break;
+	  		}
+	  	}
+	  	if (!isFound) {
+	  		m = "0";
+	  		sendto(serverSocketB, m.c_str(), sizeof m, 0, (struct sockaddr *)&storage_addr, fromlen);
+	  		cout<<"The server B has found <0> match"<<endl;
+	  	}
     }
 
     return 0;

@@ -18,7 +18,14 @@ const char* localHostAddress = "127.0.0.1";
 // attention: embed the port number for aws server into the monitor side!
 #define PORT_MONITOR_TCP 26105
 
+#define MAX_DATA_SIZE 100
+
 int main() {
+	// monitor is always on once started
+    while(true) {
+
+
+
 	/*
 		create TCP socket for monitor:
 	*/
@@ -42,9 +49,35 @@ int main() {
         return 0;
     }
     cout<<"The monitor is up and running."<<endl;
-    // monitor is always on once started
-    while(true) {
 
+    	/*
+			receive messages from AWS over TCP
+    	*/
+    	char* bufferID = new char[MAX_DATA_SIZE];
+        char* bufferSize = new char[MAX_DATA_SIZE];
+        char* bufferPower = new char[MAX_DATA_SIZE];
+        recv(monitorSocket, bufferID, sizeof bufferID, 0);
+        recv(monitorSocket, bufferSize, sizeof bufferSize, 0);
+        recv(monitorSocket, bufferPower, sizeof bufferPower, 0);
+        cout<<"The monitor received link ID=<"<<bufferID<<">, size=<"<<bufferSize<<">, and power=<"<<bufferPower<<"> from the AWS"<<endl;
+        /*
+			receive results from aws over TCP
+        */
+        char* bufferResult = new char[MAX_DATA_SIZE];
+        recv(monitorSocket, bufferResult, sizeof bufferResult, 0);
+        int result = stoi(bufferResult);
+        if (result == 0) {
+        	cout<<"Found no matches for link <"<<bufferID<<">"<<endl;
+        }
+
+
+
+
+
+        memset(bufferID, 0, MAX_DATA_SIZE);
+        memset(bufferSize, 0, MAX_DATA_SIZE);
+        memset(bufferPower, 0, MAX_DATA_SIZE);
+        memset(bufferResult, 0, MAX_DATA_SIZE);
     }
 
     return 0;

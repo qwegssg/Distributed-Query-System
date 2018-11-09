@@ -32,7 +32,6 @@ int main() {
 		close(serverSocketA);
 		return 0;
 	}
-	cout<<"socket result is "<<serverSocketA<<endl;
 	/*
 		bind the socket with a port, referred from Beej's
 	*/
@@ -71,14 +70,16 @@ int main() {
 	    	close(serverSocketA);
 	    	return 0;
 	    }
-	    // parse all the line from the database
-	    int isFound = false;
+    	// convert string into float number 
+  		double id = stod(bufferID);
+  		bool isFound = false;
+  		string m; 
+	   	// loook up every line from database
 	  	for (string line; getline(file, line);) {
 	  		stringstream ss(line);
-	  		// convert string into float number 
-	  		double id = stod(bufferID);
 	  		double i;
 	  		vector<double> vect;
+	  		// read every number of one line
 	  		while (ss >> i) {
 	  			if (i != id && !isFound) {
 	  				break;
@@ -90,19 +91,19 @@ int main() {
   					ss.ignore();
   				}
 	  		}
-	  		string m; 
 	  		if (isFound) {
 	  			m = "1";
 	  			sendto(serverSocketA, m.c_str(), sizeof m, 0, (struct sockaddr *)&storage_addr, fromlen);
 	  			for (int i = 0; i < vect.size(); i++) {
-  					sendto(serverSocketA, to_string(vect.at(i)).c_str(), sizeof to_string(vect.at(i)), 0, (struct sockaddr *)&storage_addr, fromlen);
+  					sendto(serverSocketA, to_string(vect[i]).c_str(), sizeof to_string(vect[i]), 0, (struct sockaddr *)&storage_addr, fromlen);
 	  			}
-	  			cout<<"The server A has found <1> match"<<sizeof m<<", "<<sizeof to_string(vect.at(i))<<endl;
+	  			cout<<"The server A has found <1> match"<<endl;
 	  			break;
 	  		}
 	  	}
 	  	if (!isFound) {
-
+	  		m = "0";
+	  		sendto(serverSocketA, m.c_str(), sizeof m, 0, (struct sockaddr *)&storage_addr, fromlen);
 	  		cout<<"The server A has found <0> match"<<endl;
 	  	}
 
