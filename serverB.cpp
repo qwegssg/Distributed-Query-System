@@ -45,7 +45,6 @@ int main() {
         return 0;
     }
     cout<<"The Server B is up and running using UDP on port <"<<PORT_SERVER_B_UDP<<">."<<endl;
-
     while (true) {
     	/*
 			receive link info from AWS
@@ -53,7 +52,7 @@ int main() {
     	struct sockaddr_in storage_addr;            
     	socklen_t fromlen = sizeof storage_addr; 
     	char* bufferID = new char[MAX_DATA_SIZE]; 
-    	int recvResult = recvfrom(serverSocketB, bufferID, sizeof bufferID, 0, (struct sockaddr *)&storage_addr, &fromlen);
+    	int recvResult = recvfrom(serverSocketB, bufferID, MAX_DATA_SIZE, 0, (struct sockaddr *)&storage_addr, &fromlen);
     	if (recvResult < 0) {
     		cout<<"Error occurred when receiving link info from AWS!"<<endl;
     		close(serverSocketB);
@@ -71,7 +70,7 @@ int main() {
 	    }
     	// convert string into float number 
   		double id = stod(bufferID);
-  		int isFound = false;
+  		bool isFound = false;
   		string m; 
 	   	// loook up every line from database
 	  	for (string line; getline(file, line);) {
@@ -92,21 +91,23 @@ int main() {
 	  		}
 	  		if (isFound) {
 	  			m = "1";
-	  			sendto(serverSocketB, m.c_str(), sizeof m, 0, (struct sockaddr *)&storage_addr, fromlen);
+	  			cout<<"The server B has found <1> match"<<endl;	  			
+	  			sendto(serverSocketB, m.c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&storage_addr, fromlen);
 	  			for (int i = 0; i < vect.size(); i++) {
-  					sendto(serverSocketB, to_string(vect.at(i)).c_str(), sizeof to_string(vect.at(i)), 0, (struct sockaddr *)&storage_addr, fromlen);
+  					sendto(serverSocketB, to_string(vect.at(i)).c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&storage_addr, fromlen);
 	  			}
-	  			cout<<"The server B has found <1> match"<<endl;
 	  			break;
 	  		}
 	  	}
 	  	if (!isFound) {
 	  		m = "0";
-	  		sendto(serverSocketB, m.c_str(), sizeof m, 0, (struct sockaddr *)&storage_addr, fromlen);
-	  		cout<<"The server B has found <0> match"<<endl;
+	  		cout<<"The server B has found <0> match"<<endl;	  		
+	  		sendto(serverSocketB, m.c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&storage_addr, fromlen);
 	  	}
+	  	cout<<"The Server B finished sending the output to AWS"<<endl;	
     }
 
+    close(serverSocketB);
     return 0;
 
 

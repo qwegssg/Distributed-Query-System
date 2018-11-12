@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -54,22 +55,24 @@ int main(int argc, char* argv[]) {
 		client send messages to AWS server over TCP
     */
     for (int i = 0; i < 3; i++) {
-    	send(clientSocket, argv[i + 1], sizeof argv[i + 1], 0);
+    	send(clientSocket, argv[i + 1], MAX_DATA_SIZE, 0);
     }
 	cout<<"The client sent ID=<"<<argv[1]<<">, size=<"<<argv[2]<<">, and power=<"<<argv[3]<<"> to AWS"<<endl;
     /*
 		receive results from aws over TCP
     */
     char* bufferResult = new char[MAX_DATA_SIZE];
-    recv(clientSocket, bufferResult, sizeof bufferResult, 0);
+    recv(clientSocket, bufferResult, MAX_DATA_SIZE, 0);
     int result = stoi(bufferResult);
     if (result == 0) {
     	cout<<"Found no matches for link <"<<argv[1]<<">"<<endl;
+    } 
+    else if (result == 1) {
+    	char* bufferDelay = new char[MAX_DATA_SIZE];
+    	recv(clientSocket, bufferDelay, MAX_DATA_SIZE, 0);
+    	cout<<"The delay for link <"<<argv[1]<<"> is <"<<setiosflags(ios::fixed)<<setprecision(2)<<stod(bufferDelay)<<">ms"<<endl;
     }
 
-
-
-
-
+    close(clientSocket);
 	return 0;
 }

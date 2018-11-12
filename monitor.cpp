@@ -10,6 +10,8 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <iostream>
+#include <vector>
+#include <iomanip>
 
 using namespace std;
 
@@ -23,61 +25,70 @@ const char* localHostAddress = "127.0.0.1";
 int main() {
 	// monitor is always on once started
     while(true) {
-
-
-
-	/*
-		create TCP socket for monitor:
-	*/
-	int monitorSocket = socket(AF_INET, SOCK_STREAM, 0);		//referred from Beej's
-	if (monitorSocket < 0) {
-		cout<<"Error detected when creating the socket!"<<endl;
-		close(monitorSocket);
-		return 0;
-	}
-	/*
-		connect to AWS server, referred from Beej's
-	*/
-	struct sockaddr_in aws_addr;
-    aws_addr.sin_family = AF_INET;
-    aws_addr.sin_addr.s_addr = inet_addr(localHostAddress);
-    aws_addr.sin_port = htons(PORT_MONITOR_TCP);
-    int connectResult = connect(monitorSocket, (struct sockaddr *)&aws_addr, sizeof aws_addr);
-	if (connectResult < 0) {
-   		cout<<"Error detected when binding the port!"<<endl;
-        close(monitorSocket);
-        return 0;
-    }
-    cout<<"The monitor is up and running."<<endl;
-
+	    /*
+			create TCP socket for monitor:
+		*/
+		int monitorSocket = socket(AF_INET, SOCK_STREAM, 0);		//referred from Beej's
+		if (monitorSocket < 0) {
+			cout<<"Error detected when creating the socket!"<<endl;
+			close(monitorSocket);
+			return 0;
+		}
+		/*
+			connect to AWS server, referred from Beej's
+		*/
+		struct sockaddr_in aws_addr;
+	    aws_addr.sin_family = AF_INET;
+	    aws_addr.sin_addr.s_addr = inet_addr(localHostAddress);
+	    aws_addr.sin_port = htons(PORT_MONITOR_TCP);
+	    int connectResult = connect(monitorSocket, (struct sockaddr *)&aws_addr, sizeof aws_addr);
+		if (connectResult < 0) {
+	   		cout<<"Error detected when binding the port!"<<endl;
+	        close(monitorSocket);
+	        return 0;
+	    }
+	    cout<<"The monitor is up and running."<<endl;
     	/*
 			receive messages from AWS over TCP
     	*/
-    	char* bufferID = new char[MAX_DATA_SIZE];
-        char* bufferSize = new char[MAX_DATA_SIZE];
-        char* bufferPower = new char[MAX_DATA_SIZE];
-        recv(monitorSocket, bufferID, sizeof bufferID, 0);
-        recv(monitorSocket, bufferSize, sizeof bufferSize, 0);
-        recv(monitorSocket, bufferPower, sizeof bufferPower, 0);
-        cout<<"The monitor received link ID=<"<<bufferID<<">, size=<"<<bufferSize<<">, and power=<"<<bufferPower<<"> from the AWS"<<endl;
+    	vector<string> monitor_data;
+    	for (int i = 0; i < 3; i++) {
+	    	char* buffer = new char[MAX_DATA_SIZE];
+	        int recvResult = recv(monitorSocket, buffer, MAX_DATA_SIZE, 0);
+	        if (recvResult < 0) {
+	        	cout<<"Error occurred when receiving data from AWS!"<<endl;
+	        }
+	        monitor_data.push_back(buffer);
+            free(buffer);
+            buffer = NULL;
+    	}
+        cout<<"The monitor received link ID=<"<<monitor_data[0]<<">, size=<"<<monitor_data[1]<<">, and power=<"<<monitor_data[2]<<"> from the AWS"<<endl;
         /*
 			receive results from aws over TCP
         */
         char* bufferResult = new char[MAX_DATA_SIZE];
-        recv(monitorSocket, bufferResult, sizeof bufferResult, 0);
+        recv(monitorSocket, bufferResult, MAX_DATA_SIZE, 0);
         int result = stoi(bufferResult);
         if (result == 0) {
-        	cout<<"Found no matches for link <"<<bufferID<<">"<<endl;
+        	cout<<"Found no matches for link <"<<monitor_data[0]<<">"<<endl;
         }
-
-
-
-
-
-        memset(bufferID, 0, MAX_DATA_SIZE);
-        memset(bufferSize, 0, MAX_DATA_SIZE);
-        memset(bufferPower, 0, MAX_DATA_SIZE);
-        memset(bufferResult, 0, MAX_DATA_SIZE);
+        else if (result == 1) {
+        	vector<string> monitor_delay;
+    		for (int i = 0; i < 3; i++) {
+		    	char* bufferDelay = new char[MAX_DATA_SIZE];
+		        int recvDelay = recv(monitorSocket, bufferDelay, MAX_DATA_SIZE, 0);
+		        if (recvDelay < 0) {
+		        	cout<<"Error occurred when receiving calculation result from AWS!"<<endl;
+		        }
+		        monitor_delay.push_back(bufferDelay);
+	            free(bufferDelay);
+	            bufferDelay = NULL;
+    		}
+    		cout<<"The result for link <"<<monitor_data[0]<<">:"<<endl;
+			cout<<"Tt = <"<<setiosflags(ios::fixed)<<setprecision(2)<<stod(monitor_delay[0])<<">ms,"<<endl;
+			cout<<"Tp = <"<<setiosflags(ios::fixed)<<setprecision(2)<<stod(monitor_delay[1])<<">ms,"<<endl;
+			cout<<"Delay = <"<<setiosflags(ios::fixed)<<setprecision(2)<<stod(monitor_delay[2])<<">ms"<<endl;
+        }
     }
 
     return 0;
