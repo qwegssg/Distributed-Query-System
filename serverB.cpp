@@ -72,35 +72,23 @@ int main() {
   		double id = stod(bufferID);
   		bool isFound = false;
   		string m; 
-	   	// loook up every line from database
+	   	// look up every line from database
 	  	for (string line; getline(file, line);) {
 	  		stringstream ss(line);
 	  		double i;
-	  		vector<double> vect;
-	  		// read every number of one line
-	  		while (ss >> i) {
-	  			if (i != id && !isFound) {
-	  				break;
-	  			} 
-				// if there is a match, extract the detailed link infomation
-  				isFound = true;
-  				vect.push_back(i);
-  				if (ss.peek() == ',') {
-  					ss.ignore();
-  				}
-	  		}
-	  		if (isFound) {
-	  			m = "1";
+	  		// read every first number of one line
+	  		ss >> i;
+	  		if (i == id) {
+	  			isFound = true;
+	  			m = "21";
+	  			string detailed_info = m + "," + line;
 	  			cout<<"The server B has found <1> match"<<endl;	  			
-	  			sendto(serverSocketB, m.c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&storage_addr, fromlen);
-	  			for (int i = 0; i < vect.size(); i++) {
-  					sendto(serverSocketB, to_string(vect.at(i)).c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&storage_addr, fromlen);
-	  			}
+	  			sendto(serverSocketB, detailed_info.c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&storage_addr, fromlen);
 	  			break;
 	  		}
 	  	}
 	  	if (!isFound) {
-	  		m = "0";
+	  		m = "20";
 	  		cout<<"The server B has found <0> match"<<endl;	  		
 	  		sendto(serverSocketB, m.c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&storage_addr, fromlen);
 	  	}
@@ -109,7 +97,4 @@ int main() {
 
     close(serverSocketB);
     return 0;
-
-
-
 }

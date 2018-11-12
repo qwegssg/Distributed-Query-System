@@ -13,6 +13,7 @@
 #include <typeinfo>
 #include <vector>
 #include <iomanip>
+#include <sstream>
 
 using namespace std;
 
@@ -169,7 +170,7 @@ int main() {
             return 0;
         }
         cout<<"The AWS sent link ID=<"<<client_data[0]<<"> to Backend-Server <A> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
-         /*
+        /*
             send link info to server B, referred from Beej's
         */
         struct sockaddr_in server_B_addr;
@@ -185,77 +186,76 @@ int main() {
         }
         cout<<"The AWS sent link ID=<"<<client_data[0]<<"> to Backend-Server <B> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
         /*
-            receive messages from storage server A
+            receive messages from storage server A & B
         */
-        char* buffer_A_m = new char[MAX_DATA_SIZE];
-        int recvResultA = recvfrom(awsSocket_server, buffer_A_m, MAX_DATA_SIZE, 0, (struct sockaddr *)&server_A_addr, &tolen_A);
-        if (recvResultA < 0) {
-            cout<<"Error occurred when receiving message from server A!"<<endl;
-            close(awsSocket_server);
-            return 0;
-        }
-        vector<string> vect_A_data;
-        // convert the value to integer
-        int m_A = stoi(buffer_A_m);
-        free(buffer_A_m);
-        buffer_A_m = NULL;
-        if (m_A == 1) {            
-            // receive the link ID, bandwidth, length, velocity and power one by one
-            for (int i = 0; i < 5; i++) {
-                char* buffer_A = new char[MAX_DATA_SIZE];
-                int recvDataA = recvfrom(awsSocket_server, buffer_A, MAX_DATA_SIZE, 0, (struct sockaddr *)&server_A_addr, &tolen_A);
-                if (recvDataA < 0) {
-                    cout<<"Error occurred when receiving messages from server A!"<<endl;
-                    close(awsSocket_server);
-                    return 0;
-                }
-                vect_A_data.push_back(buffer_A);
-                free(buffer_A);
-                buffer_A = NULL;
+        struct sockaddr_in storage_addr;            
+        socklen_t fromlen = sizeof storage_addr; 
+        bool isMatch_A = false;
+        bool isMatch_B = false;
+        vector<double> vect_A_data;
+        vector<double> vect_B_data;
+        for (int i = 0; i < 2; i++) {
+            char* buffer_m = new char[MAX_DATA_SIZE];
+            int recvResultM = recvfrom(awsSocket_server, buffer_m, MAX_DATA_SIZE, 0, (struct sockaddr *)&storage_addr, &fromlen);
+            if (recvResultM < 0) {
+                cout<<"Error occurred when receiving message from storage server!"<<endl;
+                close(awsSocket_server);
+                return 0;
             }
-            cout<<"The AWS received <1> matches from Backend-Server <A> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
-        } else {
-            cout<<"The AWS received <0> matches from Backend-Server <A> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
-        }
-        /*
-            receive messages from storage server B
-        */
-        char* buffer_B_m = new char[MAX_DATA_SIZE];
-        int recvResultB = recvfrom(awsSocket_server, buffer_B_m, MAX_DATA_SIZE, 0, (struct sockaddr *)&server_B_addr, &tolen_B);
-        if (recvResultB < 0) {
-            cout<<"Error occurred when receiving message from server B!"<<endl;
-            close(awsSocket_server);
-            return 0;
-        }
-        vector<string> vect_B_data;
-        // convert the value to integer
-        int m_B = stoi(buffer_B_m);
-        free(buffer_B_m);
-        buffer_B_m = NULL;
-        if (m_B == 1) {            
-            // receive the link ID, bandwidth, length, velocity and power one by one
-            for (int i = 0; i < 5; i++) {
-                char* buffer_B = new char[MAX_DATA_SIZE];
-                int recvDataB = recvfrom(awsSocket_server, buffer_B, MAX_DATA_SIZE, 0, (struct sockaddr *)&server_B_addr, &tolen_B);
-                if (recvDataB < 0) {
-                    cout<<"Error occurred when receiving messages from server B!"<<endl;
-                    close(awsSocket_server);
-                    return 0;
+            stringstream ss(buffer_m);
+            bool isChecked = false;
+            double num;
+            while (ss >> num) {
+                // the server B sends back "No Match" message
+                if (!isChecked && num == 20) {
+                    isChecked = true;
+                    cout<<"The AWS received <0> matches from Backend-Server <B> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
+                    break;
                 }
-                vect_B_data.push_back(buffer_B);
-                free(buffer_B);
-                buffer_B = NULL;
+                // the server B finds a match and sends back the detailed info
+                if (!isChecked && num == 21) {
+                    isChecked = true;
+                    isMatch_B = true;
+                    cout<<"The AWS received <1> matches from Backend-Server <B> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
+                    if (ss.peek() == ',') {
+                        ss.ignore();
+                    }
+                    continue;
+                }
+                // the server A sends back "No Match" message
+                if (!isChecked && num == 10) {
+                    isChecked = true;
+                    cout<<"The AWS received <0> matches from Backend-Server <A> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
+                    break;
+                }
+                // the server A finds a match and sends back the detailed info
+                if (!isChecked && num == 11) {
+                    isChecked = true;
+                    isMatch_A = true;
+                    cout<<"The AWS received <1> matches from Backend-Server <A> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
+                    if (ss.peek() == ',') {
+                        ss.ignore();
+                    }
+                    continue;
+                }
+                // store the link ID, bandwidth, length, velocity and power one by one
+                if (isMatch_A) {
+                    vect_A_data.push_back(num);
+                }
+                if (isMatch_B) {
+                    vect_B_data.push_back(num);
+                }
+                if (ss.peek() == ',') {
+                    ss.ignore();
+                }
             }
-            cout<<"The AWS received <1> matches from Backend-Server <B> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
-        } else {
-            cout<<"The AWS received <0> matches from Backend-Server <B> using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
         }
         /*
             if data is not found in both databases, aws send "no match found" info to client and monitor.
             if there is a match, then communicate computing serverC
         */
         string outputResult;
-        if (m_A == 0 && m_B == 0) {
+        if (!isMatch_A && !isMatch_B) {
             outputResult = "0";
             int sendNoClient = send(childSocket_client, outputResult.c_str(), MAX_DATA_SIZE, 0);
             int sendNoMonitor = send(childSocket_monitor, outputResult.c_str(), MAX_DATA_SIZE, 0);
@@ -265,10 +265,10 @@ int main() {
             }
             cout<<"The AWS sent No Match to the monitor and the client using TCP over ports <"<<PORT_MONITOR_TCP<<"> and <"<<PORT_CLIENT_TCP<<">, respectively"<<endl;
         }
+        /*
+            if there is a match, AWS sends input and link info to computing server C over UDP
+        */
         else {
-            /*
-                if there is a match, AWS sends input and link info to computing server C over UDP
-            */
             struct sockaddr_in server_C_addr;
             server_C_addr.sin_family = AF_INET;
             server_C_addr.sin_port = htons(PORT_SERVER_C_UDP);
@@ -283,9 +283,9 @@ int main() {
                 }
             }
             // attention: start sending from the second element of vector, leave the link ID since it is duplicated
-            if (m_A == 1) {
+            if (isMatch_A) {
                 for(int i = 0; i < 4; i++) {
-                    int sendResultC = sendto(awsSocket_server, vect_A_data[i + 1].c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&server_C_addr, tolen_C);
+                    int sendResultC = sendto(awsSocket_server, to_string(vect_A_data[i + 1]).c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&server_C_addr, tolen_C);
                     if (sendResultC < 0) {
                         cout<<"Error occurred when sending data to server C!"<<endl;
                         close(awsSocket_server);
@@ -293,9 +293,9 @@ int main() {
                     }
                 }
             } 
-            else if (m_B == 1) {
+            else if (isMatch_B) {
                 for(int i = 0; i < 4; i++) {
-                    int sendResultC = sendto(awsSocket_server, vect_B_data[i + 1].c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&server_C_addr, tolen_C);
+                    int sendResultC = sendto(awsSocket_server, to_string(vect_B_data[i + 1]).c_str(), MAX_DATA_SIZE, 0, (struct sockaddr *)&server_C_addr, tolen_C);
                     if (sendResultC < 0) {
                         cout<<"Error occurred when sending data to server C!"<<endl;
                         close(awsSocket_server);
@@ -321,9 +321,6 @@ int main() {
                 buffer_C = NULL;
             }
             cout<<"The AWS received outputs from Backend-Server C using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
-            // cout<<vect_C_data[0]<<endl;
-            // cout<<vect_C_data[1]<<endl;
-            // cout<<vect_C_data[2]<<endl;
             outputResult = "1";
             int sendResultClient = send(childSocket_client, outputResult.c_str(), MAX_DATA_SIZE, 0);
             int sendDelayClient = send(childSocket_client, vect_C_data[2].c_str(), MAX_DATA_SIZE, 0);
@@ -349,12 +346,10 @@ int main() {
             }
             cout<<"The AWS sent detailed results to the monitor using TCP over port <"<<PORT_MONITOR_TCP<<">"<<endl;
         }
-
     }
 
     close(awsSocket_server);
     close(awsSocket_client);
     close(awsSocket_monitor);
 	return 0;
-
 }
