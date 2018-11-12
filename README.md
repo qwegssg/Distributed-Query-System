@@ -24,7 +24,7 @@ ntohs(): network to host short
 E.g.:
 some_short == ntohs(htons(some_short)); // this expression is true 
 
-Since AWS server is able to handle one request/response from server A and server B at a time, other requests/responses need to be queued at the server site and wait for the server to be freed. Plus, since UDP is connection-less, the sequence of receiving data from server A and server B is random, so it is supposed to check the received message's address to determine where it comes from.
+Since AWS server is able to handle one request/response from server A and server B at a time, other requests/responses need to be queued at the server site and wait for the server to be freed. Plus, since UDP is <strong>connection-less</strong>, the sequence of receiving data from server A and server B is random, so it is supposed to check the received message's address to determine where it comes from.
   
 ## Reference  
 Beej's Guide to Network Programming Using Internet Sockets
