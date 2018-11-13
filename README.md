@@ -15,14 +15,16 @@ Implemented a model computational offloading where a single client issued three 
 <b>serverC.cpp</b>: receive the input and detailed info from AWS server, compute the transmission delay, propagation delay and end-to-end delay, send the result back to AWS server.  
   
 ## highlights  
-<b>recvfrom()</b>:  the recvfrom() takes a "struct sockaddr*, from" that will indicate where the data came from, and will fill in fromlen with the size of struct sockaddr. (fromlen also must be initialized to be the size of from or struct sockaddr.)
+<b>recvfrom()</b>: the recvfrom() takes a "struct sockaddr*, from" that will indicate where the data came from, and will fill in fromlen with the size of struct sockaddr. (fromlen also must be initialized to be the size of from or struct sockaddr.)
 That is, the parameter is just a placeholder and will be filled with the sender's address upon receiving the message. 
 
-<b>htons()</b>:  Since different computers use different byte orderings internally for their multibyte integers, (i.e. any integer that's larger than a char.) htons() convert from native byte order to network byte order and back again.  
+<b>htons()</b>: Since different computers use different byte orderings internally for their multibyte integers, (i.e. any integer that's larger than a char.) htons() convert from native byte order to network byte order and back again.  
 htons(): host to network short  
 ntohs(): network to host short  
 E.g.:
-some_short == ntohs(htons(some_short)); // this expression is true 
+some_short == ntohs(htons(some_short)); // this expression is true  
+  
+<strong>Blocking</strong>: By default, accept(), recv() and recvfrom() functions block. Whenever these functions are called, if there is no data, they block until some data arrives. (However, blocking is relatively a bad idea, since it is such waste of resources that the whole program needs to be waiting for the data.)
 
 Since AWS server is able to handle one request/response from server A and server B at a time, other requests/responses need to be queued at the server site and wait for the server to be freed. Plus, since UDP is <strong>connection-less</strong>, the sequence of receiving data from server A and server B is random, so it is supposed to check the received message's address to determine where it comes from.
   
