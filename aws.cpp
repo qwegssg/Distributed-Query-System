@@ -302,7 +302,7 @@ int main() {
                     }
                 }
             }
-            cout<<"The AWS sent link ID=<"<<client_data[0]<<">, size=<"<<client_data[1]<<">, power=<"<<client_data[1]<<">, and link information to Backend-Server C using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
+            cout<<"The AWS sent link ID=<"<<client_data[0]<<">, size=<"<<client_data[1]<<">, power=<"<<client_data[2]<<">, and link information to Backend-Server C using UDP over port <"<<PORT_AWS_UDP<<">"<<endl;
             /*
                 receive the calculation result from server C over UDP
             */
