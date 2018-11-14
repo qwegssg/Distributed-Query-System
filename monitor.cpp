@@ -23,31 +23,31 @@ const char* localHostAddress = "127.0.0.1";
 #define MAX_DATA_SIZE 100
 
 int main() {
-	// monitor is always on once started
+    /*
+		create TCP socket for monitor:
+    */
+    int monitorSocket = socket(AF_INET, SOCK_STREAM, 0);		//referred from Beej's
+    if (monitorSocket < 0) {
+	cout<<"Error detected when creating the socket!"<<endl;
+	close(monitorSocket);
+       	return 0;
+    }
+    /*
+		connect to AWS server, referred from Beej's
+    */
+    struct sockaddr_in aws_addr;
+    aws_addr.sin_family = AF_INET;
+    aws_addr.sin_addr.s_addr = inet_addr(localHostAddress);
+    aws_addr.sin_port = htons(PORT_MONITOR_TCP);
+    int connectResult = connect(monitorSocket, (struct sockaddr *)&aws_addr, sizeof aws_addr);
+	if (connectResult < 0) {
+		cout<<"Error detected when binding the port!"<<endl;
+	close(monitorSocket);
+	return 0;
+    }
+    cout<<"The monitor is up and running."<<endl;    
+    // monitor is always on once started
     while(true) {
-	    /*
-			create TCP socket for monitor:
-		*/
-		int monitorSocket = socket(AF_INET, SOCK_STREAM, 0);		//referred from Beej's
-		if (monitorSocket < 0) {
-			cout<<"Error detected when creating the socket!"<<endl;
-			close(monitorSocket);
-			return 0;
-		}
-		/*
-			connect to AWS server, referred from Beej's
-		*/
-		struct sockaddr_in aws_addr;
-	    aws_addr.sin_family = AF_INET;
-	    aws_addr.sin_addr.s_addr = inet_addr(localHostAddress);
-	    aws_addr.sin_port = htons(PORT_MONITOR_TCP);
-	    int connectResult = connect(monitorSocket, (struct sockaddr *)&aws_addr, sizeof aws_addr);
-		if (connectResult < 0) {
-	   		cout<<"Error detected when binding the port!"<<endl;
-	        close(monitorSocket);
-	        return 0;
-	    }
-	    cout<<"The monitor is up and running."<<endl;
     	/*
 			receive messages from AWS over TCP
     	*/
