@@ -103,19 +103,18 @@ int main() {
     */
     int listenClientResult = listen(awsSocket_client, QUEUE_LIMIT);
     int listenMonitorResult = listen(awsSocket_monitor, QUEUE_LIMIT);
-
+    /*
+                accept connection from monitor
+    */
+    socklen_t monitor_addr_size = sizeof monitor_addr;
+    int childSocket_monitor = accept(awsSocket_monitor, (struct sockaddr *)&monitor_addr, &monitor_addr_size);
+    if (childSocket_monitor < 0) {
+        cout<<"Error detected when accepting the connection with monitor!"<<endl;
+        close(childSocket_monitor);
+        return 0;
+    }
     // keep listening the upcoming connection from client
     while(true) {
-        /*
-            accept connection from monitor, then the connection must be always on!
-        */
-        socklen_t monitor_addr_size = sizeof monitor_addr;
-        int childSocket_monitor = accept(awsSocket_monitor, (struct sockaddr *)&monitor_addr, &monitor_addr_size);
-        if (childSocket_monitor < 0) {
-            cout<<"Error detected when accepting the connection with monitor!"<<endl;
-            close(childSocket_monitor);
-            return 0;
-        }
     	/*
 			accept for the incoming client(s)!
     	*/
@@ -346,6 +345,7 @@ int main() {
             }
             cout<<"The AWS sent detailed results to the monitor using TCP over port <"<<PORT_MONITOR_TCP<<">"<<endl;
         }
+	close(childSocket_client);
     }
 
     close(awsSocket_server);
