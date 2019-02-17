@@ -1,6 +1,7 @@
 # Distributed-Query-System
-Implemented a model computational offloading where a single client issued three parameters (link ID, file/packet size, and signal power) to the AWS server and expected the reply for the end-to-end delay of the designated link.  
-<div align=center><img src="https://github.com/qwegssg/Distributed-Query-System/blob/master/network_illustration.png" alt="Network Illustration" width="500"/></div>
+Implemented a model computation offloading where a single client issued three parameters (link ID, file/packet size, and signal power) to the AWS server and expected the reply for the end-to-end delay of the designated link.  
+<div align=center><img src="https://github.com/qwegssg/Distributed-Query-System/blob/master/network_illustration.png" alt="Network Illustration" width="500"/></div>  
+<p style="text-align: center">Figure1:  Illustration of the Network</p>
   
 ## Detailed functionalities  
 <b>client.cpp</b>: get the input from user, send the input to AWS server for further searching and computing, and output the delay to terminal after receiving the result from AWS server. 
